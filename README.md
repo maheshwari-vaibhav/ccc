@@ -1,0 +1,2 @@
+# ccc
+Magento Training Project
