@@ -1,2 +1,2 @@
 # ccc
-Magento Training Project
+Magento Training Project ccc
