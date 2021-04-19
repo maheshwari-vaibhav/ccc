@@ -22,7 +22,7 @@
 						<user_set>
 							<title>Manage Attribute Set</title>
 							<sort_order>100</sort_order>
-							<action>*/user_attribute</action>
+							<action>*/user_set</action>
 						</user_set>
 					</children>
 				</user_attribute>

@@ -24,7 +24,6 @@
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
-
 /**
  * Customer country attribute source
  *
@@ -32,36 +31,32 @@
  * @package     Mage_Customer
  * @author      Magento Core Team <core@magentocommerce.com>
  */
-class Mage_Customer_Model_Entity_Address_Attribute_Source_Country
-    extends Mage_Customer_Model_Resource_Address_Attribute_Source_Country
-{
-    /**
-     * Factory instance
-     *
-     * @var Mage_Core_Model_Abstract
-     */
-    protected $_factory;
+class Mage_Customer_Model_Entity_Address_Attribute_Source_Country extends Mage_Customer_Model_Resource_Address_Attribute_Source_Country {
+	/**
+	 * Factory instance
+	 *
+	 * @var Mage_Core_Model_Abstract
+	 */
+	protected $_factory;
 
-    /**
-     * Constructor for Mage_Customer_Model_Entity_Address_Attribute_Source_Country
-     *
-     * @param array $args
-     */
-    public function __construct(array $args = array())
-    {
-        $this->_factory = !empty($args['factory']) ? $args['factory'] : Mage::getSingleton('core/factory');
-    }
-    /**
-     * Retrieve all options
-     *
-     * @return array
-     */
-    public function getAllOptions()
-    {
-        if (!$this->_options) {
-            $this->_options = $this->_factory->getResourceModel('directory/country_collection')
-                ->loadByStore($this->getAttribute()->getStoreId())->toOptionArray();
-        }
-        return $this->_options;
-    }
+	/**
+	 * Constructor for Mage_Customer_Model_Entity_Address_Attribute_Source_Country
+	 *
+	 * @param array $args
+	 */
+	public function __construct(array $args = array()) {
+		$this->_factory = !empty($args['factory']) ? $args['factory'] : Mage::getSingleton('core/factory');
+	}
+	/**
+	 * Retrieve all options
+	 *
+	 * @return array
+	 */
+	public function getAllOptions($withEmpty = true, $defaultValues = false) {
+		if (!$this->_options) {
+			$this->_options = $this->_factory->getResourceModel('directory/country_collection')
+				->loadByStore($this->getAttribute()->getStoreId())->toOptionArray();
+		}
+		return $this->_options;
+	}
 }

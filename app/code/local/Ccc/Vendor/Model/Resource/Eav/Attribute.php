@@ -1,160 +1,184 @@
 <?php
 
-class Ccc_Vendor_Model_Resource_Eav_Attribute extends Mage_Eav_Model_Entity_Attribute {
-	const SCOPE_STORE = 0;
-	const SCOPE_GLOBAL = 1;
-	const SCOPE_WEBSITE = 2;
+class Ccc_Vendor_Model_Resource_Eav_Attribute extends Mage_Eav_Model_Entity_Attribute
+{
+    const SCOPE_STORE                           = 0;
+    const SCOPE_GLOBAL                          = 1;
+    const SCOPE_WEBSITE                         = 2;
+    
+    const MODULE_NAME                           = 'Ccc_Vendor';
+    const ENTITY                                = 'vendor_eav_attribute';
 
-	const MODULE_NAME = 'Ccc_Vendor';
-	const ENTITY = 'vendor_eav_attribute';
+    protected function _construct()
+    {
+        $this->_init('vendor/attribute');
+    }
 
-	protected function _construct() {
-		$this->_init('vendor/attribute');
-	}
+    
+    protected function _afterSave()
+    {
+        
+        Mage::getSingleton('eav/config')->clear();
 
-	protected function _afterSave() {
+        return parent::_afterSave();
+    }
 
-		Mage::getSingleton('eav/config')->clear();
+    
+    protected function _beforeDelete()
+    {
+        
+        Mage::getSingleton('index/indexer')->logEvent(
+            $this, self::ENTITY, Mage_Index_Model_Event::TYPE_DELETE
+        );
+        return parent::_beforeDelete();
+    }
 
-		return parent::_afterSave();
-	}
+    protected function _afterDeleteCommit()
+    {
+        parent::_afterDeleteCommit();
+        Mage::getSingleton('index/indexer')->indexEvents(
+            self::ENTITY, Mage_Index_Model_Event::TYPE_DELETE
+        );
+        return $this;
+    }
 
-	protected function _beforeDelete() {
+   
+    public function getIsGlobal()
+    {
+        return $this->_getData('is_global');
+    }
 
-		Mage::getSingleton('index/indexer')->logEvent(
-			$this, self::ENTITY, Mage_Index_Model_Event::TYPE_DELETE
-		);
-		return parent::_beforeDelete();
-	}
+    public function isScopeGlobal()
+    {
+        return $this->getIsGlobal() == self::SCOPE_GLOBAL;
+    }
 
-	protected function _afterDeleteCommit() {
-		parent::_afterDeleteCommit();
-		Mage::getSingleton('index/indexer')->indexEvents(
-			self::ENTITY, Mage_Index_Model_Event::TYPE_DELETE
-		);
-		return $this;
-	}
+    public function isScopeWebsite()
+    {
+        return $this->getIsGlobal() == self::SCOPE_WEBSITE;
+    }
 
-	public function getIsGlobal() {
-		return $this->_getData('is_global');
-	}
+    public function isScopeStore()
+    {
+        return !$this->isScopeGlobal() && !$this->isScopeWebsite();
+    }
 
-	public function isScopeGlobal() {
-		return $this->getIsGlobal() == self::SCOPE_GLOBAL;
-	}
+    public function getStoreId()
+    {
+        $dataObject = $this->getDataObject();
+        if ($dataObject) {
+            return $dataObject->getStoreId();
+        }
+        return $this->getData('store_id');
+    }
 
-	public function isScopeWebsite() {
-		return $this->getIsGlobal() == self::SCOPE_WEBSITE;
-	}
+    public function getApplyTo()
+    {
+        if ($this->getData('apply_to')) {
+            if (is_array($this->getData('apply_to'))) {
+                return $this->getData('apply_to');
+            }
+            return explode(',', $this->getData('apply_to'));
+        } else {
+            return array();
+        }
+    }
 
-	public function isScopeStore() {
-		return !$this->isScopeGlobal() && !$this->isScopeWebsite();
-	}
+    public function getSourceModel()
+    {
+        $model = $this->getData('source_model');
+        if (empty($model)) {
+            if ($this->getBackendType() == 'int' && $this->getFrontendInput() == 'select') {
+                return $this->_getDefaultSourceModel();
+            }
+        }
+        return $model;
+    }
 
-	public function getStoreId() {
-		$dataObject = $this->getDataObject();
-		if ($dataObject) {
-			return $dataObject->getStoreId();
-		}
-		return $this->getData('store_id');
-	}
+    public function isAllowedForRuleCondition()
+    {
+        $allowedInputTypes = array('text', 'multiselect', 'textarea', 'date', 'datetime', 'select', 'boolean', 'price');
+        return $this->getIsVisible() && in_array($this->getFrontendInput(), $allowedInputTypes);
+    }
 
-	public function getApplyTo() {
-		if ($this->getData('apply_to')) {
-			if (is_array($this->getData('apply_to'))) {
-				return $this->getData('apply_to');
-			}
-			return explode(',', $this->getData('apply_to'));
-		} else {
-			return array();
-		}
-	}
+    public function getFrontendLabel()
+    {
+        return $this->_getData('frontend_label');
+    }
 
-	public function getSourceModel() {
-		$model = $this->getData('source_model');
-		if (empty($model)) {
-			if ($this->getBackendType() == 'int' && $this->getFrontendInput() == 'select') {
-				return $this->_getDefaultSourceModel();
-			}
-		}
-		return $model;
-	}
+    protected function _getLabelForStore()
+    {
+        return $this->getFrontendLabel();
+    }
 
-	public function isAllowedForRuleCondition() {
-		$allowedInputTypes = array('text', 'multiselect', 'textarea', 'date', 'datetime', 'select', 'boolean', 'price');
-		return $this->getIsVisible() && in_array($this->getFrontendInput(), $allowedInputTypes);
-	}
+    public static function initLabels($storeId = null)
+    {
+        if (is_null(self::$_labels)) {
+            if (is_null($storeId)) {
+                $storeId = Mage::app()->getStore()->getId();
+            }
+            $attributeLabels = array();
+            $attributes = Mage::getResourceSingleton('vendorattribute/vendorattribute')->getAttributesByCode();
+            foreach ($attributes as $attribute) {
+                if (strlen($attribute->getData('frontend_label')) > 0) {
+                    $attributeLabels[] = $attribute->getData('frontend_label');
+                }
+            }
 
-	public function getFrontendLabel() {
-		return $this->_getData('frontend_label');
-	}
+            self::$_labels = Mage::app()->getTranslator()->getResource()
+                ->getTranslationArrayByStrings($attributeLabels, $storeId);
+        }
+    }
 
-	protected function _getLabelForStore() {
-		return $this->getFrontendLabel();
-	}
+    public function _getDefaultSourceModel()
+    {
+        return 'eav/entity_attribute_source_table';
+    }
 
-	public static function initLabels($storeId = null) {
-		if (is_null(self::$_labels)) {
-			if (is_null($storeId)) {
-				$storeId = Mage::app()->getStore()->getId();
-			}
-			$attributeLabels = array();
-			$attributes = Mage::getResourceSingleton('vendorattribute/vendorattribute')->getAttributesByCode();
-			foreach ($attributes as $attribute) {
-				if (strlen($attribute->getData('frontend_label')) > 0) {
-					$attributeLabels[] = $attribute->getData('frontend_label');
-				}
-			}
+    public function isIndexable()
+    {
+        if ($this->getAttributeCode() == 'price') {
+            return false;
+        }
 
-			self::$_labels = Mage::app()->getTranslator()->getResource()
-				->getTranslationArrayByStrings($attributeLabels, $storeId);
-		}
-	}
+        if (!$this->getIsFilterableInSearch() && !$this->getIsVisibleInAdvancedSearch() && !$this->getIsFilterable()) {
+            return false;
+        }
 
-	public function _getDefaultSourceModel() {
-		return 'eav/entity_attribute_source_table';
-	}
+        $backendType    = $this->getBackendType();
+        $frontendInput  = $this->getFrontendInput();
 
-	public function isIndexable() {
-		if ($this->getAttributeCode() == 'price') {
-			return false;
-		}
+        if ($backendType == 'int' && $frontendInput == 'select') {
+            return true;
+        } else if (($backendType == 'varchar' || $backendType == 'text') && $frontendInput == 'multiselect') {
+            return true;
+        } else if ($backendType == 'decimal') {
+            return true;
+        }
 
-		if (!$this->getIsFilterableInSearch() && !$this->getIsVisibleInAdvancedSearch() && !$this->getIsFilterable()) {
-			return false;
-		}
+        return false;
+    }
 
-		$backendType = $this->getBackendType();
-		$frontendInput = $this->getFrontendInput();
+    public function getIndexType()
+    {
+        if (!$this->isIndexable()) {
+            return false;
+        }
+        if ($this->getBackendType() == 'decimal') {
+            return 'decimal';
+        }
 
-		if ($backendType == 'int' && $frontendInput == 'select') {
-			return true;
-		} else if (($backendType == 'varchar' || $backendType == 'text') && $frontendInput == 'multiselect') {
-			return true;
-		} else if ($backendType == 'decimal') {
-			return true;
-		}
+        return 'source';
+    }
 
-		return false;
-	}
+    
+    public function afterCommitCallback()
+    {
+        parent::afterCommitCallback();
 
-	public function getIndexType() {
-		if (!$this->isIndexable()) {
-			return false;
-		}
-		if ($this->getBackendType() == 'decimal') {
-			return 'decimal';
-		}
+        $indexer = Mage::getSingleton('index/indexer');
+        $indexer->processEntityAction($this, self::ENTITY, Mage_Index_Model_Event::TYPE_SAVE);
 
-		return 'source';
-	}
-
-	public function afterCommitCallback() {
-		parent::afterCommitCallback();
-
-		$indexer = Mage::getSingleton('index/indexer');
-		$indexer->processEntityAction($this, self::ENTITY, Mage_Index_Model_Event::TYPE_SAVE);
-
-		return $this;
-	}
+        return $this;
+    }
 }

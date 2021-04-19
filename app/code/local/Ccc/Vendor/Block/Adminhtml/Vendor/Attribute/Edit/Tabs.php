@@ -28,13 +28,13 @@ class Ccc_Vendor_Block_Adminhtml_Vendor_Attribute_Edit_Tabs extends Mage_Adminht
             'content'   => $this->getLayout()->createBlock('vendor/adminhtml_vendor_attribute_edit_tab_options')->toHtml(),
         ));
         
-        if ('select' == $model->getFrontendInput()) {
-            $this->addTab('options_section', array(
-                'label'     => Mage::helper('vendor')->__('Options Control'),
-                'title'     => Mage::helper('vendor')->__('Options Control'),
-                'content'   => $this->getLayout()->createBlock('vendor/adminhtml_vendor_attribute_edit_tab_options')->toHtml(),
-            ));
-        }
+        // if ('select' == $model->getFrontendInput()) {
+        //     $this->addTab('options_section', array(
+        //         'label'     => Mage::helper('vendor')->__('Options Control'),
+        //         'title'     => Mage::helper('vendor')->__('Options Control'),
+        //         'content'   => $this->getLayout()->createBlock('vendor/adminhtml_vendor_attribute_edit_tab_options')->toHtml(),
+        //     ));
+        // }
 
         return parent::_beforeToHtml();
     }
